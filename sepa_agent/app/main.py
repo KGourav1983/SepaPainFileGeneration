@@ -1,9 +1,14 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
-from sqlalchemy import create_engine, Column, Integer, String, Float
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from . import models, schemas  # Import the models and schemas
+from .models import Base  # Import Base from models.py
+from sqlalchemy.orm import Session
+from .schemas import DirectDebitRequest
+
 
 app = FastAPI()
 
@@ -16,35 +21,16 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 # SessionLocal to interact with the database
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base class for declarative models
-Base = declarative_base()
-
-# Define the DirectDebit model for the database
-class DirectDebit(Base):
-    __tablename__ = "direct_debits"
-    id = Column(Integer, primary_key=True, index=True)
-    creditor_name = Column(String, index=True)
-    creditor_iban = Column(String)
-    debtor_name = Column(String)
-    debtor_iban = Column(String)
-    amount = Column(Float)
-    channel_initiated = Column(String)
-    account_number = Column(String)
-    remittance_info = Column(String)
-
 # Create the tables in the database
 Base.metadata.create_all(bind=engine)
 
-# Pydantic model to validate incoming requests
-class DirectDebitRequest(BaseModel):
-    creditor_name: str
-    creditor_iban: str
-    debtor_name: str
-    debtor_iban: str
-    amount: float
-    channel_initiated: str
-    account_number: str
-    remittance_info: str
+# In main.py
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 # API endpoint to accept a Direct Debit request
 @app.post("/direct-debit/")
@@ -100,3 +86,20 @@ def generate_pain_file(db: Session, file_path: str):
     tree.write(file_path)
 
     return f"PAIN file generated at {file_path}"
+
+# Call to generate the Pain File
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from . import crud, models, schemas
+from .database import SessionLocal
+import os
+
+router = APIRouter()
+
+@router.get("/generate-pain-file/")
+def generate_pain_file_endpoint(db: Session = Depends(get_db)):
+    file_path = "/path/to/your/storage/sepa_pain.xml"  # Define the location where you want to store the file
+    result = generate_pain_file(db, file_path)
+    return {"message": result}
+
+
