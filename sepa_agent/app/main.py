@@ -10,7 +10,19 @@ from .models import Base  # Import Base from models.py
 from .schemas import DirectDebitRequest
 from .models import DirectDebit  # Import DirectDebit from models.py
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
+
+# Add CORS middleware to allow requests from your frontend origin
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://orange-bassoon-5g79g5r5gqqgc4j47-5173.app.github.dev"],  # Replace with your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
 
 # SQLite Database URL
 DATABASE_URL = "sqlite:///./test.db"
