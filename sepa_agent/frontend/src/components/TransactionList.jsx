@@ -5,7 +5,7 @@ function TransactionList() {
 
   // Fetch transactions from FastAPI backend
   useEffect(() => {
-    fetch("http://localhost:8000/direct-debit/")
+    fetch("https://orange-bassoon-5g79g5r5gqqgc4j47-8000.app.github.dev/direct-debit/")
       .then((res) => res.json())
       .then((data) => setTransactions(data));
   }, []);

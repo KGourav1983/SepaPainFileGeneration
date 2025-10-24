@@ -1,19 +1,20 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter, Depends
 from pydantic import BaseModel
 from typing import List
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from . import models, schemas  # Import the models and schemas
+from sqlalchemy.orm import sessionmaker, Session
+from . import models, schemas  # Import models and schemas
+import xml.etree.ElementTree as ET
+import os
 from .models import Base  # Import Base from models.py
-from sqlalchemy.orm import Session
 from .schemas import DirectDebitRequest
-
+from .models import DirectDebit  # Import DirectDebit from models.py
 
 app = FastAPI()
 
 # SQLite Database URL
 DATABASE_URL = "sqlite:///./test.db"
+
 
 # Create a SQLAlchemy engine for SQLite
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
@@ -32,16 +33,25 @@ def get_db():
     finally:
         db.close()
 
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the SEPA PAIN File Generation API"}
+
+
 # API endpoint to accept a Direct Debit request
 @app.post("/direct-debit/")
-def create_direct_debit(request: DirectDebitRequest):
-    db = SessionLocal()
-    db_debit = DirectDebit(**request.dict())
-    db.add(db_debit)
-    db.commit()
-    db.refresh(db_debit)
-    db.close()
-    return {"message": "Direct Debit Request Accepted"}
+def create_direct_debit(request: DirectDebitRequest, db: Session = Depends(get_db)):
+    try:
+        db_debit = models.DirectDebit(**request.dict())
+        db.add(db_debit)
+        db.commit()
+        db.refresh(db_debit)
+        return {"message": "Direct Debit Request Accepted", "data": request.dict()}
+    except Exception as e:
+        db.rollback()
+        return {"error": str(e)}
+
+
 
 # API endpoint to get all stored transactions
 @app.get("/direct-debit/", response_model=List[DirectDebitRequest])
@@ -88,11 +98,7 @@ def generate_pain_file(db: Session, file_path: str):
     return f"PAIN file generated at {file_path}"
 
 # Call to generate the Pain File
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from . import crud, models, schemas
-from .database import SessionLocal
-import os
+
 
 router = APIRouter()
 
