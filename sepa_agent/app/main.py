@@ -17,7 +17,7 @@ app = FastAPI()
 # Add CORS middleware to allow requests from your frontend origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://orange-bassoon-5g79g5r5gqqgc4j47-5173.app.github.dev"],  # Replace with your frontend URL
+    allow_origins=["*"],  # Replace with your frontend URL
     allow_credentials=True,
     allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
