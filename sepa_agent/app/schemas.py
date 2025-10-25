@@ -11,5 +11,8 @@ class DirectDebitRequest(BaseModel):
     account_number: str
     remittance_info: str
 
+class DirectDebitRead(DirectDebitRequest):
+    id: int  # include auto-generated ID
+
     class Config:
         orm_mode = True  # This tells Pydantic to treat the SQLAlchemy model as a Pydantic model

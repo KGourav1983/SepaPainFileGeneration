@@ -7,7 +7,7 @@ from . import models, schemas  # Import models and schemas
 import xml.etree.ElementTree as ET
 import os
 from .models import Base  # Import Base from models.py
-from .schemas import DirectDebitRequest
+from .schemas import DirectDebitRequest, DirectDebitRead
 from .models import DirectDebit  # Import DirectDebit from models.py
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -66,7 +66,7 @@ def create_direct_debit(request: DirectDebitRequest, db: Session = Depends(get_d
 
 
 # API endpoint to get all stored transactions
-@app.get("/direct-debit/", response_model=List[DirectDebitRequest])
+@app.get("/direct-debit/", response_model=List[DirectDebitRead])
 def get_all_debits():
     db = SessionLocal()
     debits = db.query(DirectDebit).all()
