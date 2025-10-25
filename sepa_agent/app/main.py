@@ -116,8 +116,16 @@ router = APIRouter()
 
 @router.get("/generate-pain-file/")
 def generate_pain_file_endpoint(db: Session = Depends(get_db)):
-    file_path = "/path/to/your/storage/sepa_pain.xml"  # Define the location where you want to store the file
-    result = generate_pain_file(db, file_path)
-    return {"message": result}
+    # Ensure the folder exists
+    folder_path = os.path.join(os.path.dirname(__file__), "../painfiles")
+    os.makedirs(folder_path, exist_ok=True)
 
+    # Full path for the file
+    file_path = os.path.join(folder_path, "sepa_pain.xml")
+
+    result = generate_pain_file(db, file_path)
+    return {"message": result, "file_path": file_path}
+
+# Include the router in the main app
+app.include_router(router)
 
